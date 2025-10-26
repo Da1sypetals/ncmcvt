@@ -4,6 +4,7 @@ use walkdir::WalkDir;
 mod ncm;
 
 /// 从网易云音乐的 .ncm 文件格式中解密音乐文件。
+/// 默认输出为同名 .mp3 / .flac 文件。
 #[derive(Parser, Debug)]
 #[command(author, version, about, long_about = None)]
 struct Args {
@@ -11,11 +12,11 @@ struct Args {
     #[arg(required = true, name = "FILES")]
     files: Vec<PathBuf>,
 
-    /// 输出目录
+    /// 输出目录（如果没有指定，默认输出到 ~/Instrumental）
     #[arg(short, long)]
     output: Option<PathBuf>,
 
-    /// 如果输出文件已存在则跳过（默认覆盖）
+    /// 如果输出文件已存在则跳过（如果没有指定，默认覆盖）
     #[arg(short, long)]
     skip: bool,
 }

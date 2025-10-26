@@ -6,6 +6,7 @@ use ecb::Decryptor;
 use id3::{Tag, TagLike, Version};
 use metaflac::block::PictureType;
 use serde_json::Value;
+use std::env::home_dir;
 use std::fs::{self, File};
 use std::io::{self, Read, Seek, SeekFrom, Write};
 use std::path::{Path, PathBuf};
@@ -16,6 +17,9 @@ const CORE_KEY: &[u8] = b"\x68\x7a\x48\x52\x41\x6d\x73\x6f\x35\x6b\x49\x6e\x62\x
 const META_KEY: &[u8] = b"\x23\x31\x34\x6c\x6a\x6b\x5f\x21\x5c\x5d\x26\x30\x55\x3c\x27\x28";
 const NCM_MAGIC: &[u8] = b"CTENFDAM";
 const BUFFER_SIZE: usize = 16384;
+
+// 默认存放在 ~/ 目录下的哪个子目录
+pub const DEFAULT_DIR_UNDER_HOME: &str = "Instrumental";
 
 type EcbAes128Decrypt = Decryptor<aes::Aes128>;
 
@@ -174,7 +178,24 @@ pub fn decrypt_and_dump(
 
     let final_output_path = match output_path {
         Some(p) => p.with_extension(&format),
-        None => input_path.with_extension(&format),
+        None => {
+            let home_dir = home_dir().ok_or_else(|| {
+                NcmError::FileIo(io::Error::new(
+                    io::ErrorKind::NotFound,
+                    "无法获取用户的 ~ 目录",
+                ))
+            })?;
+            let default_dir = home_dir.join(DEFAULT_DIR_UNDER_HOME);
+            if !default_dir.exists() {
+                return Err(NcmError::FileIo(io::Error::new(
+                    io::ErrorKind::NotFound,
+                    format!("目录不存在: {}", default_dir.display()),
+                )));
+            }
+            default_dir
+                .join(input_path.file_name().unwrap())
+                .with_extension(&format)
+        }
     };
 
     if skip && final_output_path.exists() {
