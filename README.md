@@ -2,6 +2,11 @@
 
 一个用于解密网易云音乐格式 .ncm (NeteaseCloudMusic Format) 的命令行工具。
 
+## 安装
+
+1. Clone this repo.
+2. `cargo install --path .`
+
 ## 使用
 
 ### 基本语法
